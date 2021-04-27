@@ -1,0 +1,122 @@
+config {
+  type: "table",
+  schema: "dash01_output",
+  description: "AAT_OUT_BEHAVIOUR"
+}
+
+with a as
+  (select
+  
+    date,
+    devicecategory,
+    source,
+    medium,
+    browser,
+    shoppingstage,
+    CASE 
+      WHEN shoppingstage = "CHECKOUT_1" THEN "Basket" 
+      WHEN shoppingstage = "CHECKOUT_2" THEN "Study Method" 
+      WHEN shoppingstage = "CHECKOUT_3" THEN "Supporting Info" 
+      WHEN shoppingstage = "CHECKOUT_4" THEN "Declaration" 
+      WHEN shoppingstage = "CHECKOUT_5" THEN "Payment" 
+      WHEN shoppingstage = "TRANSACTION" THEN "Sessions with Transactions" 
+      WHEN shoppingstage = "CHECKOUT_2_WITHOUT_CHECKOUT_1" THEN "Sessions that Enter at Study Method" 
+      WHEN shoppingstage = "CHECKOUT_3_WITHOUT_CHECKOUT_2" THEN "Sessions that Enter at Supporting Info" 
+      WHEN shoppingstage = "CHECKOUT_4_WITHOUT_CHECKOUT_3" THEN "Sessions that Enter at Declaration" 
+      WHEN shoppingstage = "CHECKOUT_5_WITHOUT_CHECKOUT_4" THEN "Sessions that Enter at Payment" 
+      WHEN shoppingstage = "TRANSACTION WITHOUT CHECKOUT" THEN "Sessions that Enter at Transactions" 
+      WHEN shoppingstage = "CHECKOUT_1_ABANDONMENT" THEN "Basket Dropoff" 
+      WHEN shoppingstage = "CHECKOUT_2_ABANDONMENT" THEN "Study Method Dropoff" 
+      WHEN shoppingstage = "CHECKOUT_3_ABANDONMENT" THEN "Supporting Info Dropoff" 
+      WHEN shoppingstage = "CHECKOUT_4_ABANDONMENT" THEN "Declaration Dropoff" 
+      WHEN shoppingstage = "CHECKOUT_5_ABANDONMENT" THEN "Payment Dropoff"  
+      WHEN shoppingstage = "CHECKOUT_ABANDONMENT" THEN "Total Checkout Dropoff"  
+      WHEN shoppingstage = "CART_ABANDONMENT" THEN "Cart Abandonment"  
+      WHEN shoppingstage = "ADD_TO_CART" THEN "Sessions with Add to Cart"  
+      WHEN shoppingstage = "ADD_TO_CART_WITH_VIEW" THEN "Sessions with Add to Cart (After Show Benefits)"  
+      WHEN shoppingstage = "ADD_TO_CART_WITHOUT_VIEW" THEN "Sessions with Add to Cart (Without Show Benefits)"  
+      WHEN shoppingstage = "ALL_VISITS" THEN "All Sessions"  
+    END shopping_stage_name,
+    CASE 
+      WHEN shoppingstage = "REGISTRATION_PAGE" THEN "1) Registration Page" 
+      WHEN shoppingstage = "ADD_TO_CART" THEN "2) Add to Cart" 
+      WHEN shoppingstage = "CHECKOUT_1" THEN "1) Basket" 
+      WHEN shoppingstage in ("CHECKOUT_2","CHECKOUT_2_WITHOUT_CHECKOUT_1") THEN "2) Study Method" 
+      WHEN shoppingstage in ("CHECKOUT_3","CHECKOUT_3_WITHOUT_CHECKOUT_2") THEN "3) Supporting Info" 
+      WHEN shoppingstage in ("CHECKOUT_4","CHECKOUT_4_WITHOUT_CHECKOUT_3") THEN "4) Declaration" 
+      WHEN shoppingstage in ("CHECKOUT_5","CHECKOUT_5_WITHOUT_CHECKOUT_4") THEN "5) Payment" 
+      WHEN shoppingstage in ("TRANSACTION","TRANSACTION WITHOUT CHECKOUT") THEN "6) Sessions with Transactions" 
+      WHEN shoppingstage =  "CHECKOUT_1_ABANDONMENT" THEN "1) Basket Dropoff" 
+      WHEN shoppingstage = "CHECKOUT_2_ABANDONMENT" THEN "2) Study Method Dropoff" 
+      WHEN shoppingstage = "CHECKOUT_3_ABANDONMENT" THEN "3) Supporting Info Dropoff" 
+      WHEN shoppingstage = "CHECKOUT_4_ABANDONMENT" THEN "4) Declaration Dropoff" 
+      WHEN shoppingstage = "CHECKOUT_5_ABANDONMENT" THEN "5) Payment Dropoff"  
+    END shopping_step_ordered,
+    channelgrouping,
+    case  
+      when shoppingstage = "CHECKOUT_1" then "Basket"
+      when shoppingstage in ("CHECKOUT_2","CHECKOUT_2_WITHOUT_CHECKOUT_1") then "Study Method"
+      when shoppingstage in ("CHECKOUT_3","CHECKOUT_3_WITHOUT_CHECKOUT_2") then "Supporting Info"
+      when shoppingstage in ("CHECKOUT_4","CHECKOUT_4_WITHOUT_CHECKOUT_3") then "Declaration"
+      when shoppingstage in ("CHECKOUT_5","CHECKOUT_5_WITHOUT_CHECKOUT_4") then "Payment"
+      when shoppingstage in ("TRANSACTION","TRANSACTION_WITHOUT_CHECKOUT") then "Sessions with Transactions"
+      when shoppingstage = "CHECKOUT_1_ABANDONMENT" then "Basket Dropoff"
+      when shoppingstage = "CHECKOUT_2_ABANDONMENT" then "Study Method Dropoff"
+      when shoppingstage = "CHECKOUT_3_ABANDONMENT" then "Supporting Info Dropoff"
+      when shoppingstage = "CHECKOUT_4_ABANDONMENT" then "Declaration Dropoff"
+      when shoppingstage = "CHECKOUT_5_ABANDONMENT" then "Payment Dropoff"
+    else null end checkout_step,
+    case 
+      when replace(shoppingstage,"_ABANDONMENT","") = "CART" then "ADD_TO_CART" 
+      else replace(shoppingstage,"_ABANDONMENT","") end shopping_stage_stripped,
+    case when shoppingstage like "%ABANDONMENT" then sessions else 0 end abandoned_sessions,
+
+    sessions
+  from
+    ${ref("AAT_STG_BEHAVIOUR")}
+  ),
+
+c as (select * from  ${ref("AAT_STG_REGISTRATIONS")}),
+
+d as (
+  select 
+    c.date date,
+    c.devicecategory devicecategory,	
+    c.source source,	
+    c.medium medium, 	
+    c.browser browser, 	
+    "REGISTRATION_PAGE" shoppingstage, 	
+	  "Registration" shopping_stage_name,
+	  "0) Registration" shopping_step_ordered,	
+          case 
+        when medium = "aat_social" then "AAT Social"
+        when medium in ("paid_social","paidsocial") then "Paid Social"
+        when medium = "" then "Social"
+        when medium = "document" then "Documents"
+        when medium = "email" OR regexp_contains(source, r'(http:\/\/)?(([^.]+).)?mail.(google|yahoo|live).com|outlook.live|email') then "Email"
+        when regexp_contains(medium, r'^(cpc|ppc|paidsearch)$') then "Paid Search"
+        when regexp_contains(medium, r'banner|display') OR regexp_contains(source, r'monster_banners|reed_banners|metro_banners') then "Display"
+        when regexp_contains(medium,r'^(cpv|cpa|cpp|content-text)$') then "Other Advertising"
+        when medium = "referral" then "Referral"
+        when (source = "direct" and medium = "(not set)") or medium = "none" then "Direct"
+        when medium = "affiliate" then "Affiliates"
+      else medium end channelgrouping,
+    "" checkout_step,
+    "REGISTRATION_PAGE" shopping_stage_stripped,
+    0 abandoned_sessions, 	
+    c.uniquepageviews sessions
+
+  from c
+
+),
+
+final as (
+
+  select * from a 
+  union all 
+  select * from d
+)
+
+
+
+select * from final

@@ -1,0 +1,40 @@
+config {
+  type: "table",
+  schema: "dash01_output",
+  description: "AAT_OUT_EVENTS"
+}
+
+with final as
+  (select
+      date,
+      eventcategory,
+      eventaction,
+      eventlabel,
+      source,
+      medium,
+      devicecategory,
+      pagepath,
+      hostname,
+      browser,
+      case 
+        when medium = "aat_social" then "AAT Social"
+        when medium in ("paid_social","paidsocial") then "Paid Social"
+        when medium = "" then "Social"
+        when medium = "document" then "Documents"
+        when medium = "email" OR regexp_contains(source, r'(http:\/\/)?(([^.]+).)?mail.(google|yahoo|live).com|outlook.live|email') then "Email"
+        when regexp_contains(medium, r'^(cpc|ppc|paidsearch)$') then "Paid Search"
+        when regexp_contains(medium, r'banner|display') OR regexp_contains(source, r'monster_banners|reed_banners|metro_banners') then "Display"
+        when regexp_contains(medium,r'^(cpv|cpa|cpp|content-text)$') then "Other Advertising"
+        when medium = "referral" then "Referral"
+        when (source = "direct" and medium = "(not set)") or medium = "none" then "Direct"
+        when medium = "affiliate" then "Affiliates"
+      else medium end channelgrouping,
+
+      totalevents,
+      uniqueevents
+    from
+      ${ref("AAT_STG_EVENTS")})
+
+
+
+select * from final

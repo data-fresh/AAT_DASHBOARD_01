@@ -1,0 +1,28 @@
+config {
+  type: "table",
+  schema: "dash01_output",
+  description: "AAT_OUT_PRODUCTS"
+}
+
+with final as
+  (select
+
+    date,
+    productname,
+    productsku,
+    
+    productaddstocart,
+    productcheckouts,
+    productdetailviews,
+    productremovesfromcart,
+    productlistclicks,
+    uniquepurchases,
+    uniquepurchases * product_price as productrevenue
+   
+  from
+    ${ref("AAT_STG_PRODUCTS")}
+  left join ${ref("AAT_PRICING")}
+  on productname = product_name 
+  )
+
+select * from final

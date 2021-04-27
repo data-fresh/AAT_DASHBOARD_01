@@ -1,0 +1,30 @@
+config {
+  type: "table",
+  schema: "dash01_output",
+  description: "sessions_student_registration"
+}
+
+with final as
+  (select
+    date,
+    landingpagepath,
+    devicecategory,
+    source,
+    medium,
+    hostname,
+    campaign,
+    browser,
+    channelgrouping,
+    
+    sessions,
+    bounces,
+    sessionduration,
+    pageviews,
+    transactions,
+    transactionrevenue
+
+  from
+    ${ref("AAT_STG_SESSIONS")}
+  )
+
+select * from final

@@ -1,0 +1,28 @@
+config {
+  type: "table",
+  schema: "dash01_output",
+  description: "AAT_EVENTS_OUTPUT"
+}
+
+with final as
+  (select
+
+    date,
+    pagepath,
+    previouspagepath,
+    devicecategory,
+    hostname,
+    
+    pageviews,
+    uniquepageviews,
+    timeonpage,
+    entrances,
+    pagevalue,
+    exits,
+    pageloadtime
+
+  from
+    ${ref("AAT_STG_PAGES")}
+  )
+
+select * from final

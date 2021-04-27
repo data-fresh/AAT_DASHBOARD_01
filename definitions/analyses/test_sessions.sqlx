@@ -1,0 +1,28 @@
+config {
+  type: "table",
+  schema: "dash01_analyses",
+  tags: ["tests"]
+}
+
+
+select sum(sessions) sessions, "output_aat_shopping_behaviour" source 
+from ${ref("aat_shopping_behaviour")}
+group by source
+
+union all
+
+select sum(sessions) sessions, "output_aat_sessions_student_registration" source 
+from ${ref("aat_sessions_student_registration")}
+group by source
+
+union all
+
+SELECT sum(sessions) sessions, "AAT_GA_SESSIONS" source 
+FROM `arc-02.virtuality.AAT_GA_SESSIONS`
+group by source
+
+union all
+
+SELECT sum(sessions) sessions, "AAT_GA_SHOPPING_BEHAVIOUR" source 
+FROM `arc-02.virtuality.AAT_GA_SHOPPING_BEHAVIOUR`
+group by source

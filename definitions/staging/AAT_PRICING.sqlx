@@ -1,0 +1,23 @@
+config {
+  type: "table",
+  schema: "dash01_staging",
+  description: "product pricing"
+}
+
+with a as
+
+(select
+  right(left(product_name,length(product_name)-1),length(product_name)-2) product_name,
+  product_price,
+  date_effective_from,
+  max(date_effective_from) over(partition by product_name) maxDate
+  from
+  ${ref("price_ref")}
+  where product_name is not null
+  )
+
+select * except(maxDate,date_effective_from)
+
+from a 
+
+where date_effective_from = maxDate

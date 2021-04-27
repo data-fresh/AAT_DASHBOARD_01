@@ -1,0 +1,7 @@
+config {
+  type: "declaration",
+  database: "arc-02",
+  schema: "virtuality",
+  name: "analytics_AAT_GA_PRODUCTS_01",
+  description: "AAT GA PRODUCTS"
+}

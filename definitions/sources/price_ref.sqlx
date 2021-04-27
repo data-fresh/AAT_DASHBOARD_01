@@ -1,0 +1,8 @@
+
+config {
+  type: "declaration",
+  database: "aatc-306409",
+  schema: "seed",
+  name: "price_ref",
+  description: "product pricing reference"
+}

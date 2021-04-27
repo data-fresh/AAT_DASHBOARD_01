@@ -1,0 +1,25 @@
+config {
+  type: "table",
+  schema: "dash01_staging",
+  description: "aggregate CD"
+}
+
+select
+
+  date,
+  eventcategory,
+  eventaction,
+  eventlabel,
+  split(sourcemedium,"/")[offset(0)] source,
+  split(sourcemedium,"/")[offset(1)] medium,
+  devicecategory,
+  pagepath,
+  hostname,
+  browser,
+
+
+  totalevents,
+  uniqueevents
+
+from
+  ${ref("AAT_GA_EVENTS_02")}

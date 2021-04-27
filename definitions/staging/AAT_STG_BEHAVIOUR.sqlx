@@ -1,0 +1,18 @@
+config {
+  type: "table",
+  schema: "dash01_staging",
+  description: "AAT_SHOPPING BEHAVIOUR"
+}
+
+select
+  date,
+  devicecategory,
+  split(sourcemedium,"/")[offset(0)] source,
+  split(sourcemedium,"/")[offset(1)] medium,
+  browser,
+  shoppingstage,
+  channelgrouping,
+
+  sessions
+from
+  ${ref("AAT_GA_SHOPPING_BEHAVIOUR_01")}

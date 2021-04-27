@@ -1,0 +1,25 @@
+
+config {
+  type: "table",
+  schema: "dash01_staging",
+  description: "AAT_PRODUCTS"
+}
+
+select
+  
+  date,
+  productname,
+  productsku,
+  
+  productaddstocart,
+  productcheckouts,
+  productdetailviews,
+  productremovesfromcart,
+  productlistclicks,
+  productlistviews,
+  uniquepurchases,
+  itemrevenue,
+  itemquantity
+
+from
+  ${ref("analytics_AAT_GA_PRODUCTS_01")}

@@ -1,0 +1,20 @@
+
+config {
+  type: "table",
+  schema: "dash01_staging",
+  description: "aggregate CD"
+}
+
+select
+
+  date,
+  devicecategory,
+  split(sourcemedium,"/")[offset(0)] source,
+  split(sourcemedium,"/")[offset(1)] medium,
+  pagepath,
+  browser,
+
+  uniquepageviews
+
+from
+  ${ref("AAT_GA_REGISTRATIONS")}
